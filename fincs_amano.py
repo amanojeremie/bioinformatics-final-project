@@ -113,11 +113,12 @@ def align_sequences(sequences):
 		print("Score: ", best_alignment[4])
 		print() #New line to separate each recursive call
 		new_sequences = [best_alignment[2]]
+		new_sequences_2 = [best_alignment[3]]
 		sequences.remove(best_alignment[0])
 		sequences.remove(best_alignment[1])
 		new_sequences.extend(sequences)
-		return align_sequences(new_sequences)
-
+		new_sequences_2.extend(sequences)
+		return max([align_sequences(new_sequences), align_sequences(new_sequences_2)], key = lambda alignment: alignment[4])
 
 def main(argv):
 	"""
@@ -143,6 +144,8 @@ def main(argv):
 	combined_alignment = align_sequences(sequences)
 	print(combined_alignment[2][0])
 	print("Final score:", combined_alignment[4])
+	print(combined_alignment[2][1])
+	print(combined_alignment[3][1])
 
 if __name__ == "__main__":
 	main(sys.argv)
