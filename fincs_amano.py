@@ -86,8 +86,8 @@ def align(seq_1_tuple, seq_2_tuple, match_bonus, mismatch_penalty, gap_penalty):
 			seq_2_index -= 1
 			seq_1_index -= 1
 
-	return (seq_1_tuple, seq_2_tuple, (seq_1_tuple[0] + " & " + seq_2_tuple[0], aligned_seq_1), 
-		(seq_1_tuple[0] + " & " + seq_2_tuple[1], aligned_seq_2), alignment_table[len(seq_2)][len(seq_1)])
+	return (seq_1_tuple, seq_2_tuple, ((seq_1_tuple[0], seq_2_tuple[0], alignment_table[len(seq_2)][len(seq_1)]), aligned_seq_1), 
+		((seq_1_tuple[0], seq_2_tuple[0], alignment_table[len(seq_2)][len(seq_1)]), aligned_seq_2), alignment_table[len(seq_2)][len(seq_1)])
 
 def align_sequences(sequences):
 	"""
@@ -108,10 +108,10 @@ def align_sequences(sequences):
 		return alignments[0]
 	else:
 		best_alignment = max(alignments, key = lambda alignment: alignment[4])
-		#Find the highest scoring alignment and removes the sequences that lead to the alignment
-		print(best_alignment[2][0])
-		print("Score: ", best_alignment[4])
-		print() #New line to separate each recursive call
+		# #Find the highest scoring alignment and removes the sequences that lead to the alignment
+		# print(best_alignment[2][0])
+		# print("Score: ", best_alignment[4])
+		# print() #New line to separate each recursive call
 		new_sequences = [best_alignment[2]]
 		new_sequences_2 = [best_alignment[3]]
 		sequences.remove(best_alignment[0])
@@ -140,12 +140,20 @@ def main(argv):
 			sequence = file.readline()[:-1].upper() #Omits the newline character and capitilizes max sequence
 			if valid_sequence(sequence):
 				sequences.append((name, sequence))
+
 	print("Aligning " + str(len(sequences)) + " sequences")
-	combined_alignment = align_sequences(sequences)
+	combined_alignment = align_sequences(sequences.copy())
 	print(combined_alignment[2][0])
 	print("Final score:", combined_alignment[4])
 	print(combined_alignment[2][1])
 	print(combined_alignment[3][1])
+	print()
+	for sequence in sequences:
+		alignment = max(align_sequences([sequence, combined_alignment[2]]),
+			align_sequences([sequence, combined_alignment[3]]), key = lambda alignment: alignment[4])
+		print(sequence[0] + " Score: " + str(alignment[4]))
+		print(alignment[2][1])
+		print(alignment[3][1])
 
 if __name__ == "__main__":
 	main(sys.argv)
