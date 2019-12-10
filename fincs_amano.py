@@ -148,12 +148,63 @@ def main(argv):
 	print(combined_alignment[2][1])
 	print(combined_alignment[3][1])
 	print()
+
+
+	#Realign with final alignment
+	aligned_sequences = []
 	for sequence in sequences:
 		alignment = max(align_sequences([sequence, combined_alignment[2]]),
 			align_sequences([sequence, combined_alignment[3]]), key = lambda alignment: alignment[4])
 		print(sequence[0] + " Score: " + str(alignment[4]))
 		print(alignment[2][1])
-		print(alignment[3][1])
+		aligned_sequences.append(alignment[2][1])
+
+	print("Finding conserved sequences")
+	conserved_sequences = []
+	latest_window = 0
+
+	#Iterate through the combined alignment
+	for window_start in range(0, len(combined_alignment[2][1])):
+		
+		if window_start < latest_window:
+			continue
+
+		isEqual = True
+		letters = []
+
+		#Find a index in which every realignment has a matching character 
+		for sequence in aligned_sequences:
+			if sequence[window_start] == "_":
+				isEqual = False
+				break
+			if len(letters) == 0:
+				letters.append(sequence[window_start])
+			elif letters.count(sequence[window_start]) == 0:
+				isEqual = False
+				break
+		
+
+		if isEqual:
+			last_alike = window_start
+			#Build the matching string until characters diverge
+			for window_end in range(window_start + 1, min([window_start + 25, len(combined_alignment[2][1])])):
+				
+				subsequence = []
+				isEqual = True
+				for sequence in aligned_sequences:
+					if len(subsequence) == 0:
+						subsequence.append(sequence[window_start:window_end])
+					elif subsequence.count(sequence[window_start:window_end]) == 0:
+						isEqual = False
+						break
+					else:
+						latest_window = window_end
+						last_alike = window_end
+			conserved_sequences.append((combined_alignment[2][1][window_start:last_alike], window_start))
+			
+	print("Conserved sequences (sequence, alignment position):")
+	print(conserved_sequences)
+
 
 if __name__ == "__main__":
 	main(sys.argv)
