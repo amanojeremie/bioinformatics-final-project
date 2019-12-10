@@ -120,6 +120,12 @@ def align_sequences(sequences):
 		new_sequences_2.extend(sequences)
 		return max([align_sequences(new_sequences), align_sequences(new_sequences_2)], key = lambda alignment: alignment[4])
 
+def str_insert(str, insert, index):
+	"""
+		Inserts a string into another string at a given index
+	"""
+	return str[:index] + insert + str[index:]
+
 def main(argv):
 	"""
 		Given a FASTA file, globally align all the sequences within
@@ -157,7 +163,8 @@ def main(argv):
 			align_sequences([sequence, combined_alignment[3]]), key = lambda alignment: alignment[4])
 		print(sequence[0] + " Score: " + str(alignment[4]))
 		print(alignment[2][1])
-		aligned_sequences.append(alignment[2][1])
+		print()
+		aligned_sequences.append((sequence[0], alignment[2][1]))
 
 	print("Finding conserved sequences")
 	conserved_sequences = []
@@ -173,7 +180,8 @@ def main(argv):
 		letters = []
 
 		#Find a index in which every realignment has a matching character 
-		for sequence in aligned_sequences:
+		for sequence_tuple in aligned_sequences:
+			sequence = sequence_tuple[1]
 			if sequence[window_start] == "_":
 				isEqual = False
 				break
@@ -191,7 +199,8 @@ def main(argv):
 				
 				subsequence = []
 				isEqual = True
-				for sequence in aligned_sequences:
+				for sequence_tuple in aligned_sequences:
+					sequence = sequence_tuple[1]
 					if len(subsequence) == 0:
 						subsequence.append(sequence[window_start:window_end])
 					elif subsequence.count(sequence[window_start:window_end]) == 0:
@@ -201,10 +210,28 @@ def main(argv):
 						latest_window = window_end
 						last_alike = window_end
 			conserved_sequences.append((combined_alignment[2][1][window_start:last_alike], window_start))
-			
+
 	print("Conserved sequences (sequence, alignment position):")
 	print(conserved_sequences)
 
+	#Creates an html file that highlights the conserved sequences
+	html_file = open("./output.html", "w")
+	for sequence_tuple in aligned_sequences:
+		highlighted_sequence = sequence_tuple[1]
+		char_additions = 0 #Number of additional characters that have been inserted, to realign with conserved offsets
+		for conserved in conserved_sequences:
+			new_sequence = str_insert(highlighted_sequence, "<span style='background-color: #ff0000'>", conserved[1] + char_additions)
+			char_additions += len(new_sequence) - len(highlighted_sequence)
+			highlighted_sequence = new_sequence
 
+			new_sequence = str_insert(highlighted_sequence, "</span>", conserved[1] + len(conserved[0]) + char_additions)
+			char_additions += len(new_sequence) - len(highlighted_sequence)
+			highlighted_sequence = new_sequence
+
+		print("<p>" + sequence_tuple[0] + "</p>", file=html_file)
+		print("<p style='font-family: Consolas, Courier'>" + highlighted_sequence + "</p>", file=html_file)
+	
+	html_file.close()
+		
 if __name__ == "__main__":
 	main(sys.argv)
